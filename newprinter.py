@@ -1449,7 +1449,7 @@ class NewPrinterGUI(GtkGUI):
                 port = 631
             try:
                 debugprint('Download ppd file from remote server')
-                conn = http.client.HTTPConnection(resg[0], port)
+                conn = http.client.HTTPConnection(host=resg[0], port=port, timeout=10)
                 conn.request("GET", "/printers/%s.ppd" % resg[2])
                 resp = conn.getresponse()
                 if resp.status == 200:
