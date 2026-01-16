@@ -74,11 +74,13 @@ TEXT_adjust_firewall = _("The firewall may need adjusting in order to "
                          "firewall now?")
 
 def validDeviceURI (uri):
-    """Returns True is the provided URI is valid."""
-    (scheme, rest) = urllib.parse.splittype (uri)
-    if scheme is None or scheme == '':
-        return False
-    return True
+    # """Returns True is the provided URI is valid."""
+    """Returns True if the provided URI contains :// (for protocol) or if it starts with correct IP address."""
+    # (scheme, rest) = urllib.parse.splittype (uri)
+    # if scheme is None or scheme == '':
+    #     return False
+    # return True
+    return '://' in uri or re.match(r'^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)', uri)
 
 # Both the printer properties window and the new printer window
 # need to be able to drive 'class members' selections.
