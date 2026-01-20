@@ -1495,6 +1495,52 @@ class NewPrinterGUI(GtkGUI):
                 uri.find ("/cups") != -1 and self.device.info):
             # Remote CUPS queue discovered by "dnssd" CUPS backend
             self.remotecupsqueue = self.device.info
+        elif uri.startswith("ipp://") or uri.startswith("ipps://"):
+            # Это любой IPP принтер - тоже должен работать без драйвера
+            self.remotecupsqueue = "ipp_printer"
+            try:
+                # Попробуем получить информацию о принтере
+                parsed = urllib.parse.urlparse(uri)
+                host = parsed.hostname
+                port = parsed.port or 631
+                path = parsed.path
+
+                # Удаляем начальный слеш если есть
+                if path.startswith('/'):
+                    path = path[1:]
+
+                # Если путь пустой, это может быть корневой URI принтера
+                if not path or path == 'ipp' or path == 'print':
+                    # Для корневого URI используем 'ipp'
+                    queue_name = 'ipp'
+                else:
+                    # Извлекаем имя принтера из пути
+                    queue_name = path.split('/')[0] if '/' in path else path
+
+                encryption = cups.HTTP_ENCRYPT_IF_REQUESTED if uri.startswith("ipps://") else cups.HTTP_ENCRYPT_NEVER
+
+                try:
+                    c = cups.Connection(host=host,
+                                        port=port,
+                                        encryption=encryption)
+
+                    # Пробуем получить атрибуты принтера
+                    r = ['printer-info', 'printer-location']
+                    attrs = c.getPrinterAttributes(uri=uri,
+                                                   requested_attributes=r)
+                    info = attrs.get('printer-info', '')
+                    location = attrs.get('printer-location', '')
+                    if len(info) > 0:
+                        self.entNPDescription.set_text(info)
+                    if len(location) > 0:
+                        self.device.location = location
+                except:
+                    # Не удалось подключиться - это нормально
+                    pass
+
+            except:
+                # В случае ошибок просто продолжаем
+                pass
 
     def _handleDriverInstallation (self):
         # Install package of the driver found on OpenPrinting
@@ -1560,6 +1606,11 @@ class NewPrinterGUI(GtkGUI):
                     ppdname = 'raw'
                     self.ppd = ppdname
                 name = self.remotecupsqueue
+                if name == "ipp_printer":
+                    # Для общего IPP принтера используем имя из URI
+                    if self.device.uri:
+                        parsed = urllib.parse.urlparse(self.device.uri)
+                        name = parsed.hostname or "ipp_printer"
                 name = self.makeNameUnique (name)
                 self.entNPName.set_text (name)
                 status = "exact"
