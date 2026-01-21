@@ -2374,6 +2374,13 @@ class NewPrinterGUI(GtkGUI):
 
     def add_devices (self, devices, current_uri, no_more=False):
         if current_uri:
+            # if printer is an IPP printer, then its URI should be converted to ipp://{current_uri}/ipp/print
+            if re.match(r'^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)', current_uri):
+                try:
+                    if self.remotecupsqueue == 'ipp_printer':
+                        current_uri = f'ipp://{current_uri}/ipp/print'
+                except:
+                    pass
             if current_uri in devices:
                 current = devices.pop(current_uri)
             elif current_uri.replace (":9100", "") in devices:
