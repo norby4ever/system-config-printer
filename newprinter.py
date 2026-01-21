@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import ipaddress
 
 ## system-config-printer
 
@@ -74,13 +75,78 @@ TEXT_adjust_firewall = _("The firewall may need adjusting in order to "
                          "firewall now?")
 
 def validDeviceURI (uri):
-    # """Returns True is the provided URI is valid."""
-    """Returns True if the provided URI contains :// (for protocol) or if it starts with correct IP address."""
+    """Returns True if the provided URI is correct."""
     # (scheme, rest) = urllib.parse.splittype (uri)
     # if scheme is None or scheme == '':
     #     return False
     # return True
-    return '://' in uri or re.match(r'^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)', uri)
+    ans = False
+
+    if '://' in uri:
+        ans = True
+
+    # IPv4 or IPv6
+    try:
+        ip = ipaddress.ip_address(uri)
+        if ip.version in (4, 6):
+            ans = True
+    except ValueError:
+        pass
+
+    # [IPv6]
+    if uri.startswith('[') and uri.endswith(']'):
+        uri = uri[1:-1]
+        try:
+            ip = ipaddress.IPv6Address(uri)
+            ans = True
+        except ValueError:
+            pass
+
+    # IPv4:port, [IPv6]:port
+    if ':' in uri:
+        ip_part, port_part = uri.rsplit(':', 1)
+        try:
+            port = int(port_part)
+            if 1 <= port <= 65535:
+                if ip_part.startswith('[') and ip_part.endswith(']'):
+                    ip_part = ip_part[1:-1]
+                    ipaddress.IPv6Address(ip_part)
+                    ans = True
+                else:
+                    ipaddress.IPv4Address(ip_part)
+                    ans = True
+        except:
+            pass
+
+    # domain.example.com, domain.example.com:port
+    domain_pattern = r'^[a-zA-Z0-9][a-zA-Z0-9\-\.]*[a-zA-Z0-9](:\d{1,5})?$'
+    error_in_domain = False
+    if re.match(domain_pattern, uri):
+        if ':' in uri:
+            host_part, port_part = uri.rsplit(':', 1)
+            try:
+                port = int(port_part)
+                if not 1 <= port <= 65535:
+                    error_in_domain = True
+            except ValueError:
+                error_in_domain = True
+        else:
+            host_part = uri
+
+        if '..' in host_part or host_part.startswith('.') or host_part.endswith('.'):
+            error_in_domain = True
+
+        if len(host_part) > 253:
+            error_in_domain = True
+
+        for part in host_part.split('.'):
+            if len(part) > 63:
+                error_in_domain = True
+
+        ans = not error_in_domain
+
+    return ans
+
 
 # Both the printer properties window and the new printer window
 # need to be able to drive 'class members' selections.
