@@ -143,7 +143,7 @@ def validDeviceURI (uri):
             if len(part) > 63:
                 error_in_domain = True
 
-        ans = not error_in_domain
+        ans = ans or (not error_in_domain)
 
     return ans
 
