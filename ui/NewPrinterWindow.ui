@@ -3280,35 +3280,76 @@ ipp://printer.mydomain/ipp</property>
                 </child>
               </object>
               <packing>
-                <property name="position">7</property>
-              </packing>
-            </child>
-            <child type="tab">
-              <object class="GtkLabel" id="label209">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Downloadable Drivers</property>
-              </object>
-              <packing>
-                <property name="position">7</property>
-                <property name="tab_fill">False</property>
-              </packing>
-            </child>
+        <property name="position">7</property>
+      </packing>
+    </child>
+    <child type="tab">
+      <object class="GtkLabel" id="label209">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Downloadable Drivers</property>
+      </object>
+      <packing>
+        <property name="position">7</property>
+        <property name="tab_fill">False</property>
+      </packing>
+    </child>
+
+    <!-- НОВАЯ ВКЛАДКА Driverless -->
+    <child>
+      <object class="GtkBox" id="vbox_driverless">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="border_width">12</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">12</property>
+        <child>
+          <object class="GtkLabel" id="label_driverless_title">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="label" translatable="yes">&lt;span weight="bold" size="larger"&gt;Driverless Printing&lt;/span&gt;</property>
+            <property name="use_markup">True</property>
+            <property name="wrap">True</property>
           </object>
           <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
             <property name="position">0</property>
           </packing>
         </child>
         <child>
-          <object class="GtkBox" id="hbox80">
+          <object class="GtkBox" id="vbox_driverless_content">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="border_width">12</property>
+            <property name="orientation">vertical</property>
+            <property name="spacing">12</property>
             <child>
-              <object class="GtkSpinner" id="spinner">
+              <object class="GtkFrame" id="frame_driverless_info">
+                <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <object class="GtkLabel" id="label_driverless_info">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">start</property>
+                    <property name="margin_start">12</property>
+                    <property name="margin_top">6</property>
+                    <property name="margin_bottom">6</property>
+                    <property name="label" translatable="yes">Your printer supports driverless printing (IPP Everywhere). This is the recommended method for modern network printers as it provides automatic driver installation and better compatibility.</property>
+                    <property name="wrap">True</property>
+                  </object>
+                </child>
+                <child type="label">
+                  <object class="GtkLabel" id="label_driverless_info_title">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Information&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -3317,75 +3358,145 @@ ipp://printer.mydomain/ipp</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButtonBox" id="hbuttonbox2">
+              <object class="GtkFrame" id="frame_driverless_choice">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="spacing">3</property>
-                <property name="layout_style">end</property>
+                <property name="label_xalign">0</property>
+                <property name="shadow_type">none</property>
                 <child>
-                  <object class="GtkButton" id="btnNPBack">
-                    <property name="label" translatable="yes">_Back</property>
+                  <object class="GtkBox" id="vbox_driverless_options">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="can_default">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="use_underline">True</property>
-                    <signal name="clicked" handler="on_btnNPBack_clicked" swapped="no"/>
+                    <property name="can_focus">False</property>
+                    <property name="margin_start">12</property>
+                    <property name="margin_top">6</property>
+                    <property name="margin_bottom">6</property>
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">6</property>
+                    <child>
+                      <object class="GtkRadioButton" id="rbtnDriverless">
+                        <property name="label" translatable="yes">Use driverless printing (recommended)</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="halign">start</property>
+                        <property name="use_underline">True</property>
+                        <property name="active">True</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkRadioButton" id="rbtnTraditionalDrivers">
+                        <property name="label" translatable="yes">Select driver manually</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="halign">start</property>
+                        <property name="use_underline">True</property>
+                        <property name="draw_indicator">True</property>
+                        <property name="group">rbtnDriverless</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
                   </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">False</property>
-                    <property name="position">0</property>
-                  </packing>
                 </child>
-                <child>
-                  <object class="GtkButton" id="btnNPCancel">
-                    <property name="label" translatable="yes">_Cancel</property>
+                <child type="label">
+                  <object class="GtkLabel" id="label_driverless_choice_title">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="can_default">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="use_underline">True</property>
-                    <signal name="clicked" handler="on_NPCancel" swapped="no"/>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Printing Method&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
                   </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">False</property>
-                    <property name="position">1</property>
-                  </packing>
                 </child>
-                <child>
-                  <object class="GtkButton" id="btnNPApply">
-                    <property name="label" translatable="yes">_Apply</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="can_default">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="use_underline">True</property>
-                    <signal name="clicked" handler="on_btnNPApply_clicked" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">False</property>
-                    <property name="position">2</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="btnNPForward">
-                    <property name="label" translatable="yes">_Forward</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="can_default">True</property>
-                    <property name="receives_default">False</property>
-                    <property name="use_underline">True</property>
-                    <signal name="clicked" handler="on_btnNPForward_clicked" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">False</property>
-                    <property name="position">3</property>
-                  </packing>
-                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="cbxShowAllDrivers">
+                <property name="label" translatable="yes">Show all available drivers</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="halign">start</property>
+                <property name="use_underline">True</property>
+                <property name="draw_indicator">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+                <property name="position">8</property>
+              </packing>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel" id="label_driverless_tab">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Driverless</property>
+              </object>
+              <packing>
+                <property name="position">8</property>
+                <property name="tab_fill">False</property>
+              </packing>
+            </child>
+          </object> <!-- Закрытие ntbkNewPrinter -->
+        <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <!-- Панель с кнопками навигации и спиннером -->
+        <child>
+          <object class="GtkBox" id="hbox_bottom_controls">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_top">12</property>
+            <property name="margin_bottom">12</property>
+            <property name="margin_start">12</property>
+            <property name="margin_end">12</property>
+            <property name="spacing">12</property>
+            <child>
+              <!-- Спиннер для индикации загрузки -->
+              <object class="GtkSpinner" id="spinner">
+                <property name="visible">False</property>
+                <property name="can_focus">False</property>
+                <property name="active">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <!-- Распорка для выравнивания кнопок вправо -->
+              <object class="GtkBox" id="spacer">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -3393,10 +3504,60 @@ ipp://printer.mydomain/ipp</property>
                 <property name="position">1</property>
               </packing>
             </child>
+            <child>
+              <!-- Кнопка "Назад" -->
+              <object class="GtkButton" id="btnNPBack">
+                <property name="label" translatable="yes">_Back</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="receives_default">False</property>
+                <property name="use_underline">True</property>
+                <property name="sensitive">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <!-- Кнопка "Вперед" -->
+              <object class="GtkButton" id="btnNPForward">
+                <property name="label" translatable="yes">_Forward</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="receives_default">False</property>
+                <property name="use_underline">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <!-- Кнопка "Применить" -->
+              <object class="GtkButton" id="btnNPApply">
+                <property name="label" translatable="yes">_Apply</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_underline">True</property>
+                <property name="sensitive">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">4</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
-            <property name="fill">False</property>
+            <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
         </child>

@@ -259,6 +259,7 @@ class NewPrinterGUI(GtkGUI):
     PAGE_APPLY = 5
     PAGE_INSTALLABLE_OPTIONS = 6
     PAGE_DOWNLOAD_DRIVER = 7
+    PAGE_DRIVERLESS = 8
 
     # Values returned by _handlePrinterInstallationMode() and
     # related sub-functions, to know whether to continue the
@@ -386,7 +387,13 @@ class NewPrinterGUI(GtkGUI):
                               "frmNPDownloadableDriverLicenseTerms",
                               "tvNPDownloadableDriverLicense",
                               "rbtnNPDownloadLicenseYes",
-                              "rbtnNPDownloadLicenseNo"],
+                              "rbtnNPDownloadLicenseNo",
+                              "cbxShowAllDrivers",
+                              "rbtnDriverless",
+                              "rbtnTraditionalDrivers",
+                              # "vbDriverlessInfo",  # контейнер для driverless страницы
+                              # "lblDriverlessInfo"
+                              ],
                          "WaitWindow":
                              ["WaitWindow",
                               "lblWait"],
@@ -472,6 +479,8 @@ class NewPrinterGUI(GtkGUI):
         self.ntbkPPDSource.set_show_tabs(False)
         self.ntbkNPType.set_show_tabs(False)
         self.ntbkNPDownloadableDriverProperties.set_show_tabs(False)
+        self.driverless_mode = True  # Enabled by default
+        self.show_all_drivers = False  # Disabled by default
 
         self.spinner_count = 0
 
@@ -572,11 +581,61 @@ class NewPrinterGUI(GtkGUI):
 
         self.device_selected = -1
         self.dialog_mode = "printer"
+
+        # Add widgets for driverless page
+        # self.cbxShowAllDrivers = self.NewPrinterWindow.get_object("cbxShowAllDrivers")
+        # self.rbtnDriverless = self.NewPrinterWindow.get_object("rbtnDriverless")
+        # self.rbtnTraditionalDrivers = self.NewPrinterWindow.get_object("rbtnTraditionalDrivers")
+
+        # Default settings
+        if hasattr(self, 'driverless_mode') and self.driverless_mode:
+            self.rbtnDriverless.set_active(True)
+        else:
+            self.rbtnTraditionalDrivers.set_active(True)
+
+        # event handlers
+        self.driverless_mode = False
+        self.show_all_drivers = False
+
+        # Установка обработчиков для новых виджетов
+        if hasattr(self, 'cbxShowAllDrivers'):
+            self.cbxShowAllDrivers.connect("toggled", self.on_show_all_drivers_toggled)
+        if hasattr(self, 'rbtnDriverless'):
+            self.rbtnDriverless.connect("toggled", self.on_driver_mode_toggled)
+        if hasattr(self, 'rbtnTraditionalDrivers'):
+            self.rbtnTraditionalDrivers.connect("toggled", self.on_driver_mode_toggled)
+
+        # Скрыть виджеты по умолчанию (они будут показаны только для IPP принтеров)
+        if hasattr(self, 'cbxShowAllDrivers'):
+            self.cbxShowAllDrivers.hide()
+        if hasattr(self, 'rbtnDriverless'):
+            self.rbtnDriverless.hide()
+        if hasattr(self, 'rbtnTraditionalDrivers'):
+            self.rbtnTraditionalDrivers.hide()
+        if hasattr(self, 'vbDriverlessInfo'):
+            self.vbDriverlessInfo.hide()
+
         self.connect_signals ()
         debugprint ("+%s" % self)
 
     def __del__ (self):
         debugprint ("-%s" % self)
+
+    def on_show_all_drivers_toggled(self, widget):
+        """event handler for showing all drivers"""
+        self.show_all_drivers = widget.get_active()
+        if self.show_all_drivers:
+            self.rbtnTraditionalDrivers.set_active(True)
+        self.setNPButtons()
+
+    def on_driver_mode_toggled(self, widget):
+        """event handler for switching driver mode"""
+        if widget.get_active():
+            if widget == self.rbtnDriverless:
+                self.driverless_mode = True
+                self.cbxShowAllDrivers.set_active(False)
+            else:
+                self.driverless_mode = False
 
     def do_destroy (self):
         debugprint ("DESTROY: %s" % self)
@@ -1156,9 +1215,55 @@ class NewPrinterGUI(GtkGUI):
     def _installdialog_response (self, dialog, response):
         self.p.terminate ()
 
+    def updateDriverlessOptions(self):
+        """Обновить опции для driverless режима"""
+        if not self.device:
+            return
+
+        uri = self.device.uri
+        is_ipp_printer = uri and (uri.startswith("ipp://") or uri.startswith("ipps://"))
+
+        if is_ipp_printer and hasattr(self, 'cbxShowAllDrivers'):
+            # Проверить поддержку IPP 2.x
+            self.checkIPP2xSupport(uri)
+
+            if self.driverless_mode:
+                # Показать опции для driverless
+                self.cbxShowAllDrivers.show()
+                self.cbxShowAllDrivers.set_active(False)
+                self.show_all_drivers = False
+
+                # Установить driverless по умолчанию
+                if hasattr(self, 'rbtnDriverless'):
+                    self.rbtnDriverless.show()
+                    self.rbtnDriverless.set_active(True)
+                if hasattr(self, 'rbtnTraditionalDrivers'):
+                    self.rbtnTraditionalDrivers.show()
+                    self.rbtnTraditionalDrivers.set_active(False)
+
+                # Показать информационный текст
+                if hasattr(self, 'vbDriverlessInfo'):
+                    self.vbDriverlessInfo.show()
+            else:
+                # Скрыть driverless опции для обычных IPP принтеров
+                self.hideDriverlessOptions()
+        else:
+            self.hideDriverlessOptions()
+
+    def hideDriverlessOptions(self):
+        """Скрыть driverless опции"""
+        for widget_name in ['cbxShowAllDrivers', 'rbtnDriverless',
+                            'rbtnTraditionalDrivers', 'vbDriverlessInfo']:
+            if hasattr(self, widget_name):
+                getattr(self, widget_name).hide()
+
     def nextNPTab(self, step=1):
         page_nr = self.ntbkNewPrinter.get_current_page()
         debugprint ("Next clicked on page %d" % page_nr)
+
+        # Показать/скрыть driverless опции на странице выбора метода установки
+        if page_nr == self.PAGE_SELECT_INSTALL_METHOD and step >= 0:
+            self.updateDriverlessOptions()
 
         keep_going = True
         if self.dialog_mode == "printer" or self.dialog_mode == "printer_with_uri" or \
@@ -1270,7 +1375,14 @@ class NewPrinterGUI(GtkGUI):
                 self.PAGE_DOWNLOAD_DRIVER
             ]
         elif self.dialog_mode == "printer":
-            if self.remotecupsqueue:
+            if self.driverless_mode and not self.show_all_drivers:
+                # driverless mode for IPP 2.x printers
+                order = [
+                    self.PAGE_SELECT_DEVICE,
+                    self.PAGE_DRIVERLESS,
+                    self.PAGE_DESCRIBE_PRINTER
+                ]
+            elif self.remotecupsqueue:
                 order = [
                     self.PAGE_SELECT_DEVICE,
                     self.PAGE_DESCRIBE_PRINTER
@@ -1443,6 +1555,23 @@ class NewPrinterGUI(GtkGUI):
                 uri = SMBURI (uri=uri[6:]).sanitize_uri ()
                 self._installSMBBackendIfNeeded ()
 
+        use_driverless = False
+        if hasattr(self, 'driverless_mode') and self.driverless_mode:
+            if hasattr(self, 'rbtnDriverless') and self.rbtnDriverless.get_active():
+                use_driverless = True
+            elif hasattr(self, 'show_all_drivers') and not self.show_all_drivers:
+                use_driverless = True
+
+        if use_driverless:
+            # Используем raw драйвер для driverless
+            self.ppd = 'raw'
+            self.exactdrivermatch = True
+            return self.INSTALL_RESULT_DONE
+
+        if self.driverless_mode and not self.show_all_drivers:
+            self.ppd = 'raw'  # use raw driver
+            return self.INSTALL_RESULT_DONE
+
         if page_nr == self.PAGE_SELECT_DEVICE or page_nr == self.PAGE_SELECT_INSTALL_METHOD:
             self._selectDeviceForInstallation (uri)
         elif page_nr == self.PAGE_DOWNLOAD_DRIVER and self.nextnptab_rerun == False:
@@ -1482,9 +1611,38 @@ class NewPrinterGUI(GtkGUI):
             except:
                 nonfatalException ()
 
+    def checkIPP2xSupport(self, uri):
+        """Check if printer supports IPP 2.x"""
+        self.driverless_mode = False
+        if not uri:
+            return
+        if uri and (uri.startswith("ipp://") or uri.startswith("ipps://")):
+            try:
+                parsed = urllib.parse.urlparse(uri)
+                host = parsed.hostname
+                port = parsed.port or 631
+
+                # Try to get IPP 2.x attributes
+                conn = cups.Connection(host=host, port=port)
+                attrs = conn.getPrinterAttributes(uri=uri)
+
+                # Check presence of IPP 2.x attributes
+                if 'ipp-versions-supported' in attrs:
+                    versions = attrs['ipp-versions-supported']
+                    if isinstance(versions, list):
+                        if '2.0' in versions or '2.1' in versions or '2.2' in versions:
+                            self.driverless_mode = True
+                    elif isinstance(versions, str):
+                        if '2.0' in versions or '2.1' in versions or '2.2' in versions:
+                            self.driverless_mode = True
+            except:
+                pass  # Any error - leave as is
+
     def _selectDeviceForInstallation (self, uri):
         self._initialiseAutoVariables ()
         self.device.uri = self.getDeviceURI ()
+
+        self.checkIPP2xSupport(uri)
 
         # Cancel the printer finder now as the user has
         # already selected their device.
@@ -3715,6 +3873,12 @@ class NewPrinterGUI(GtkGUI):
         self.tvNPMakes.set_sensitive(rbtn1)
         self.filechooserPPD.set_sensitive(rbtn2)
 
+        show_driverless = (rbtn1 or rbtn3) and self.driverless_mode
+        for widget_name in ['cbxShowAllDrivers', 'rbtnDriverless',
+                            'rbtnTraditionalDrivers', 'vbDriverlessInfo']:
+            if hasattr(self, widget_name):
+                getattr(self, widget_name).set_visible(show_driverless)
+
         if rbtn1:
             page = self.PAGE_DESCRIBE_PRINTER
         if rbtn2:
@@ -4479,6 +4643,8 @@ class NewPrinterGUI(GtkGUI):
                 uri = self.device.uri
             else:
                 uri = self.getDeviceURI()
+            if not self.ppd and self.driverless_mode:
+                self.ppd = 'raw'
             if not self.ppd: # XXX needed?
                 # Go back to previous page to re-select driver.
                 self.nextNPTab(-1)
