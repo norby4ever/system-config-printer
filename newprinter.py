@@ -1562,8 +1562,17 @@ class NewPrinterGUI(GtkGUI):
             # Remote CUPS queue discovered by "dnssd" CUPS backend
             self.remotecupsqueue = self.device.info
         elif uri.startswith("ipp://") or uri.startswith("ipps://"):
-            # Это любой IPP принтер - тоже должен работать без драйвера
-            self.remotecupsqueue = "ipp_printer"
+            # Any IPP printer
+            parsed = urllib.parse.urlparse(uri)
+
+            # Check whether this is an IPP printer or remote CUPS queue
+            if parsed.path.startswith('/printers/'):
+                # Remote CUPS queue
+                self.remotecupsqueue = parsed.path.split('/')[-1] if parsed.path.split('/')[-1] else 'ipp_printer'
+
+            else:
+                # An IPP printer, saving full URI
+                self.remotecupsqueue = "ipp_printer"
             try:
                 # Попробуем получить информацию о принтере
                 parsed = urllib.parse.urlparse(uri)
@@ -1671,12 +1680,17 @@ class NewPrinterGUI(GtkGUI):
                 if self.ppd is None:
                     ppdname = 'raw'
                     self.ppd = ppdname
-                name = self.remotecupsqueue
-                if name == "ipp_printer":
-                    # Для общего IPP принтера используем имя из URI
-                    if self.device.uri:
-                        parsed = urllib.parse.urlparse(self.device.uri)
+                if self.remotecupsqueue == "ipp_printer" and self.device.uri:
+                    # For IPP printer uses full URI as a basename
+                    parsed = urllib.parse.urlparse(self.device.uri)
+                    if parsed.path:
+                        # get name from the last part of the path
+                        path_parts = parsed.path.strip('/').split('/')
+                        name = path_parts[-1] if path_parts else 'ipp_printer'
+                    else:
                         name = parsed.hostname or "ipp_printer"
+                else:
+                    name = self.remotecupsqueue
                 name = self.makeNameUnique (name)
                 self.entNPName.set_text (name)
                 status = "exact"
