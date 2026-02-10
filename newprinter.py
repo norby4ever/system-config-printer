@@ -1562,17 +1562,22 @@ class NewPrinterGUI(GtkGUI):
             # Remote CUPS queue discovered by "dnssd" CUPS backend
             self.remotecupsqueue = self.device.info
         elif uri.startswith("ipp://") or uri.startswith("ipps://"):
-            # Any IPP printer
-            parsed = urllib.parse.urlparse(uri)
-
-            # Check whether this is an IPP printer or remote CUPS queue
-            if parsed.path.startswith('/printers/'):
-                # Remote CUPS queue
-                self.remotecupsqueue = parsed.path.split('/')[-1] if parsed.path.split('/')[-1] else 'ipp_printer'
-
+            # Проверяем, это удаленная CUPS очередь или просто IPP принтер
+            if "/printers/" in uri:
+                # Это удаленная CUPS очередь
+                res = re.search(r"ipp://(\S+?)(:\d+|)/printers/(\S+)", uri)
+                if res:
+                    resg = res.groups()
+                    if len(resg[1]) > 0:
+                        port = int(resg[1][1:])
+                    else:
+                        port = 631
+                    # ... существующий код для удаленных CUPS очередей
+                    self.remotecupsqueue = resg[2]
             else:
-                # An IPP printer, saving full URI
-                self.remotecupsqueue = "ipp_printer"
+                # Это просто IPP принтер, не помечаем как удаленную CUPS очередь
+                self.remotecupsqueue = None
+
             try:
                 # Попробуем получить информацию о принтере
                 parsed = urllib.parse.urlparse(uri)
